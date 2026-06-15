@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>TaskFlow — To-Do Dashboard</title>
+  <link rel="stylesheet" href="style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet"/>
+  <!-- Lucide Icons -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.1/umd/lucide.min.js"></script>
+</head>
+<body>
+
+<!-- ===================== TOAST CONTAINER ===================== -->
+<div id="toast-container" aria-live="polite"></div>
+
+<!-- ===================== APP WRAPPER ===================== -->
+<div class="app-wrapper">
+
+  <!-- ========== LEFT SIDEBAR ========== -->
+  <aside class="sidebar" id="sidebar">
+    <!-- Logo -->
+    <div class="sidebar-logo">
+      <div class="logo-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/>
+        </svg>
+      </div>
+      <span class="logo-text">TaskFlow</span>
+      <button class="sidebar-close-btn" id="sidebarCloseBtn" title="Close menu">
+           
+      </button>
+    </div>
+
+    <!-- Search -->
+    <div class="sidebar-search">
+      <i data-lucide="search" size="15"></i>
+      <input type="text" id="sidebarSearch" placeholder="Search tasks…" autocomplete="off"/>
+    </div>
+  
+    <!-- Navigation -->
+    <nav class="sidebar-nav">
+      <p class="nav-label">Categories</p>
+      <ul>
+        <li class="nav-item active" data-view="today">
+          <i data-lucide="sun" size="16"></i>
+          <span>Today</span>
+          <span class="nav-badge" id="todayCount">0</span>
+        </li>
+        <li class="nav-item" data-view="upcoming">
+          <i data-lucide="calendar-clock" size="16"></i>
+          <span>Upcoming</span>
+          <span class="nav-badge" id="upcomingCount">0</span>
+        </li>
+        <li class="nav-item" data-view="calendar">
+          <i data-lucide="calendar" size="16"></i>
+          <span>Calendar</span>
+        </li>
+      </ul>
+
+      <p class="nav-label" style="margin-top:20px">Lists</p>
+      <ul id="listsNav">
+        <li class="nav-item" data-list="personal">
+          <span class="list-dot" style="background:#6C63FF"></span>
+          <span>Personal</span>
+          <span class="nav-badge" id="personalCount">0</span>
+        </li>
+        <li class="nav-item" data-list="work">
+          <span class="list-dot" style="background:#F97316"></span>
+          <span>Work</span>
+          <span class="nav-badge" id="workCount">0</span>
+        </li>
+        <li class="nav-item" data-list="shopping">
+          <span class="list-dot" style="background:#10B981"></span>
+          <span>Shopping</span>
+          <span class="nav-badge" id="shoppingCount">0</span>
+        </li>
+      </ul>
+
+      <!-- Add custom list -->
+      <button class="add-list-btn" id="addListBtn">
+        <i data-lucide="plus" size="14"></i> Add List
+      </button>
+
+      <!-- Tags -->
+      <p class="nav-label" style="margin-top:20px">Tags</p>
+      <div class="tags-cloud" id="tagsCloud">
+        <!-- Populated by JS -->
+      </div>
+    </nav>
+
+    <!-- Bottom: Settings + Dark Mode -->
+    <div class="sidebar-footer">
+      <button class="footer-btn" id="clearAllBtn" title="Clear all completed">
+        <i data-lucide="trash-2" size="16"></i>
+        <span>Clear Completed</span>
+      </button>
+      <button class="footer-btn" id="settingsBtn" title="Settings">
+        <i data-lucide="settings" size="16"></i>
+        <span>Settings</span>
+      </button>
+      <button class="footer-btn dark-toggle" id="darkModeToggle" title="Toggle dark mode">
+        <i data-lucide="moon" size="16"></i>
+        <span>Dark Mode</span>
+      </button>
+    </div>
+  </aside>
+
+  <!-- ========== CENTER PANEL ========== -->
+  <main class="center-panel">
+
+    <!-- Mobile header -->
+    <div class="mobile-header">
+      <button class="hamburger" id="hamburgerBtn">
+        <i data-lucide="menu" size="22"></i>
+      </button>
+      <span class="mobile-logo">TaskFlow</span>
+      <button class="mobile-details-btn" id="mobileDetailsBtn">
+        <i data-lucide="panel-right" size="22"></i>
+      </button>
+    </div>
+
+    <!-- Panel Header -->
+    <div class="panel-header">
+      <div>
+        <h1 class="panel-title" id="panelTitle">Today</h1>
+        <p class="task-counter" id="taskCounter">0 tasks remaining</p>
+      </div>
+      <div class="header-actions">
+  <select id="sortSelect" class="sort-select">
+    <option value="createdAt">Newest First</option>
+    <option value="dueDate">Due Date</option>
+    <option value="priority">Priority</option>
+    <option value="name">A-Z</option>
+  </select>
+</div>
+    </div>
+
+    <!-- Add Task Row -->
+    <div class="add-task-row" id="addTaskRow">
+      <div class="add-task-input-wrap">
+        <i data-lucide="plus-circle" size="18" class="add-icon"></i>
+        <input type="text" id="newTaskInput" placeholder="Add a new task…" autocomplete="off"/>
+      </div>
+      <select id="newTaskPriority" class="priority-select-mini" title="Priority">
+        <option value="medium">Medium</option>
+        <option value="high">High</option>
+        <option value="low">Low</option>
+      </select>
+      <input type="date" id="newTaskDate" class="date-input-mini" title="Due date"/>
+      <button class="btn-primary" id="addTaskBtn">Add</button>
+    </div>
+
+    <!-- Filter Buttons -->
+    <div class="filter-bar">
+      <button class="filter-btn active" data-filter="all">All</button>
+      <button class="filter-btn" data-filter="active">Active</button>
+      <button class="filter-btn" data-filter="completed">Completed</button>
+    </div>
+
+    <!-- Task List -->
+    <div class="task-list" id="taskList">
+      <!-- Tasks rendered by JS -->
+    </div>
+
+    <!-- Empty State -->
+    <div class="empty-state" id="emptyState">
+      <div class="empty-icon">
+        <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 9h18"/>
+          <path d="M8 13h4M8 17h8"/>
+        </svg>
+      </div>
+      <h3>All clear!</h3>
+      <p>Add a task above to get started.</p>
+    </div>
+
+  </main>
+
+  <!-- ========== RIGHT PANEL ========== -->
+  <aside class="detail-panel" id="detailPanel">
+    <div class="detail-empty" id="detailEmpty">
+      <i data-lucide="mouse-pointer-click" size="40"></i>
+      <p>Select a task to view details</p>
+    </div>
+
+    <div class="detail-content" id="detailContent" style="display:none">
+      <!-- Detail Header -->
+      <div class="detail-header">
+        <h3 class="detail-section-label">Task Details</h3>
+        <button class="btn-icon" id="closeDetailBtn" title="Close">
+          <i data-lucide="x" size="16"></i>
+        </button>
+      </div>
+
+      <!-- Title -->
+      <div class="detail-field">
+        <label class="detail-label">Title</label>
+        <input type="text" id="detailTitle" class="detail-input" placeholder="Task title…"/>
+      </div>
+
+      <!-- Description -->
+      <div class="detail-field">
+        <label class="detail-label">Description</label>
+        <textarea id="detailDesc" class="detail-textarea" placeholder="Add notes or details…" rows="4"></textarea>
+      </div>
+
+      <!-- Due Date -->
+      <div class="detail-field">
+        <label class="detail-label">Due Date</label>
+        <input type="date" id="detailDate" class="detail-input"/>
+      </div>
+
+      <!-- Priority -->
+      <div class="detail-field">
+        <label class="detail-label">Priority</label>
+        <div class="priority-selector" id="prioritySelector">
+          <button class="priority-btn" data-priority="high">
+            <span class="priority-dot" style="background:#EF4444"></span> High
+          </button>
+          <button class="priority-btn" data-priority="medium">
+            <span class="priority-dot" style="background:#F97316"></span> Medium
+          </button>
+          <button class="priority-btn" data-priority="low">
+            <span class="priority-dot" style="background:#10B981"></span> Low
+          </button>
+        </div>
+      </div>
+
+      <!-- List -->
+      <div class="detail-field">
+        <label class="detail-label">List</label>
+        <select id="detailList" class="detail-input">
+          <option value="personal">Personal</option>
+          <option value="work">Work</option>
+          <option value="shopping">Shopping</option>
+        </select>
+      </div>
+
+      <!-- Tags -->
+      <div class="detail-field">
+        <label class="detail-label">Tags</label>
+        <div class="tag-input-row">
+          <input type="text" id="detailTagInput" class="detail-input" placeholder="Add tag + Enter"/>
+        </div>
+        <div class="tags-list" id="detailTags"></div>
+      </div>
+
+      <!-- Subtasks -->
+      <div class="detail-field">
+        <label class="detail-label">Subtasks</label>
+        <div class="subtask-input-row">
+          <input type="text" id="subtaskInput" class="detail-input" placeholder="Add subtask + Enter"/>
+        </div>
+        <ul class="subtask-list" id="subtaskList"></ul>
+      </div>
+
+      <!-- Actions -->
+      <div class="detail-actions">
+        <button class="btn-primary" id="saveChangesBtn">
+          <i data-lucide="save" size="15"></i> Save Changes
+        </button>
+        <button class="btn-danger" id="deleteTaskDetailBtn">
+          <i data-lucide="trash-2" size="15"></i> Delete
+        </button>
+      </div>
+    </div>
+  </aside>
+
+</div><!-- /app-wrapper -->
+
+<!-- ========== ADD LIST MODAL ========== -->
+<div class="modal-overlay" id="addListModal">
+  <div class="modal">
+    <h3>New List</h3>
+    <input type="text" id="newListName" class="detail-input" placeholder="List name…"/>
+    <div class="modal-colors" id="modalColors">
+      <span class="color-swatch active" style="background:#6C63FF" data-color="#6C63FF"></span>
+      <span class="color-swatch" style="background:#F97316" data-color="#F97316"></span>
+      <span class="color-swatch" style="background:#10B981" data-color="#10B981"></span>
+      <span class="color-swatch" style="background:#3B82F6" data-color="#3B82F6"></span>
+      <span class="color-swatch" style="background:#EC4899" data-color="#EC4899"></span>
+      <span class="color-swatch" style="background:#EAB308" data-color="#EAB308"></span>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-secondary" id="cancelListBtn">Cancel</button>
+      <button class="btn-primary" id="confirmListBtn">Create</button>
+    </div>
+  </div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
